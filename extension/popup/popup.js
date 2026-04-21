@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
     statusEl.style.color = isError ? '#c00' : '#080';
   }
 
-  function sendImageDataToTab(imageDataUrl, send, callback) {
+  function sendImageDataToTab(imageDataUrl, imageName, send, callback) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (!tabs || !tabs[0]) {
         updateStatus('找不到作用中分頁', true);
@@ -18,10 +18,10 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
       const tabId = tabs[0].id;
-      chrome.tabs.sendMessage(tabId, { action: 'inject_image_data', imageData: imageDataUrl, send: send }, function (response) {
+      chrome.tabs.sendMessage(tabId, { action: 'inject_image_data', imageData: imageDataUrl, fileName: imageName, send: send }, function (response) {
         if (chrome.runtime.lastError) {
           updateStatus('擴充注入失敗，嘗試 fallback: ' + chrome.runtime.lastError.message, true);
-          fallbackInjectImageData(tabId, imageDataUrl, send, callback);
+          fallbackInjectImageData(tabId, imageDataUrl, imageName, send, callback);
         } else {
           if (callback) callback(null, response);
         }
@@ -29,11 +29,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  function fallbackInjectImageData(tabId, imageDataUrl, send, callback) {
+  function fallbackInjectImageData(tabId, imageDataUrl, imageName, send, callback) {
     chrome.scripting.executeScript(
       {
         target: { tabId: tabId },
-        func: function (dataUrl, doSend) {
+        func: function (dataUrl, fileName, doSend) {
           const selector = 'rich-textarea .ql-editor, .text-input-field_textarea .ql-editor, .ql-editor.textarea.new-input-ui, .ql-editor';
           const editor = document.querySelector(selector);
           if (!editor) {
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
           for (let i = 0; i < binary.length; i++) {
             array[i] = binary.charCodeAt(i);
           }
-          const file = new File([array], 'page.png', { type: mime });
+          const file = new File([array], fileName, { type: mime });
           const dt = new DataTransfer();
           dt.items.add(file);
           const dragEventInit = { bubbles: true, cancelable: true, dataTransfer: dt };
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }
           return { result: 'ok' };
         },
-        args: [imageDataUrl, send]
+        args: [imageDataUrl, imageName, send]
       },
       function (results) {
         if (chrome.runtime.lastError) {
@@ -133,7 +133,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
           }
           const imageDataUrl = data.images[index];
-          sendImageDataToTab(imageDataUrl, send, (err) => {
+          const imageName = `page_${index + 1}.png`;
+          sendImageDataToTab(imageDataUrl, imageName, send, (err) => {
             if (err) {
               updateStatus('插入圖片失敗: ' + err.message, true);
               return;

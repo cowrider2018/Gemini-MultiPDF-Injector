@@ -18,7 +18,7 @@
             return true;
           }
           if (message.action === 'inject_image_data' || message.imageData) {
-            insertImageDataToGemini(message.imageData, { send: !!message.send });
+            insertImageDataToGemini(message.imageData, { send: !!message.send, fileName: message.fileName });
             sendResponse({ result: 'ok' });
             return true;
           }
@@ -104,7 +104,8 @@ function insertImageDataToGemini(dataUrl, opts) {
     return;
   }
   editor.focus();
-  const file = dataUrlToFile(dataUrl, 'page.png');
+  const fileName = opts && opts.fileName ? opts.fileName : 'page.png';
+  const file = dataUrlToFile(dataUrl, fileName);
   injectImageFile(editor, file, opts);
 }
 
