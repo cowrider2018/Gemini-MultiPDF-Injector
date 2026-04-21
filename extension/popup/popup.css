@@ -217,21 +217,69 @@ body {
 }
 
 #pdfFile:hover,
-#pages:hover {
+#pages:hover,
+.prompt-input:hover {
   border-color: #8B7355;
   background: #FFFEF9;
 }
 
 #pdfFile:focus,
-#pages:focus {
+#pages:focus,
+.prompt-input:focus {
   outline: none;
   border-color: #5A7656;
   box-shadow: 0 0 0 3px rgba(90, 118, 86, 0.1);
   background: #FFFBF8;
 }
 
+#pdfFile {
+  cursor: pointer;
+}
+
 .pages-input {
   margin-bottom: 6px;
+}
+
+.prompt-input {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  padding: 12px 14px;
+  border: 1px solid #D4C4B0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: 'Georgia', serif;
+  color: #4A4A4A;
+  background: #FFFBF8;
+  line-height: 1.6;
+  transition: all 0.2s ease;
+}
+
+.prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.btn-secondary {
+  padding: 8px 12px;
+  background: #F3E6D2;
+  color: #6B553E;
+  border: 1px solid #D4C4B0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Georgia', serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #E8D6BC;
+  border-color: #B69D7E;
+}
+
+.btn-secondary:active {
+  transform: translateY(1px);
 }
 
 /* ===== 提示文字 ===== */

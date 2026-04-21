@@ -1,11 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
   const pdfFileInput = document.getElementById('pdfFile');
   const pagesInput = document.getElementById('pages');
+  const helperPromptInput = document.getElementById('helperPrompt');
   const uploadBtn = document.getElementById('uploadPdfBtn');
   const statusEl = document.getElementById('status');
   const doSendEl = document.getElementById('doSend');
   const pdfUploadArea = document.getElementById('pdfUploadArea');
   const fileNameDisplay = document.getElementById('fileName');
+  const DEFAULT_PROMPT = (window.DEFAULT_PROMPT && String(window.DEFAULT_PROMPT).trim()) || '請從 PDF 中萃取重點與上下文，並整理成精準摘要。';
 
   function updateStatus(msg, isError) {
     statusEl.textContent = msg;
@@ -34,6 +36,49 @@ document.addEventListener('DOMContentLoaded', function () {
       displayFileName(e.target.files[0].name);
     }
   });
+
+  // 載入時自動填入預設提示
+  helperPromptInput.value = DEFAULT_PROMPT;
+
+  function fallbackInjectTextToTab(tabId, promptText, callback) {
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: tabId },
+        func: function (text) {
+          const selector = 'rich-textarea .ql-editor, .text-input-field_textarea .ql-editor, .ql-editor.textarea.new-input-ui, .ql-editor';
+          const editor = document.querySelector(selector);
+          if (!editor) {
+            return { error: 'Gemini editor not found' };
+          }
+          editor.focus();
+          const paragraphs = String(text)
+            .split(/\r?\n/)
+            .map(line => line ? line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;') : '<br>')
+            .map(line => `<p>${line}</p>`)
+            .join('');
+          editor.innerHTML = paragraphs;
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
+          const range = document.createRange();
+          range.selectNodeContents(editor);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          return { result: 'ok' };
+        },
+        args: [promptText]
+      },
+      function (results) {
+        if (chrome.runtime.lastError) {
+          if (callback) callback(new Error(chrome.runtime.lastError.message));
+        } else if (results && results[0] && results[0].result && results[0].result.error) {
+          if (callback) callback(new Error(results[0].result.error));
+        } else {
+          if (callback) callback(null, results);
+        }
+      }
+    );
+  }
 
   // 拖放事件
   ['dragenter', 'dragover'].forEach(eventName => {
@@ -69,9 +114,23 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }, false);
 
-  function updateStatus(msg, isError) {
-    statusEl.textContent = msg;
-    statusEl.style.color = isError ? '#c00' : '#080';
+  function insertPromptTextToTab(promptText, callback) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      if (!tabs || !tabs[0]) {
+        updateStatus('找不到作用中分頁', true);
+        if (callback) callback(new Error('no active tab'));
+        return;
+      }
+      const tabId = tabs[0].id;
+      chrome.tabs.sendMessage(tabId, { action: 'inject', text: promptText, send: false }, function (response) {
+        if (chrome.runtime.lastError) {
+          updateStatus('提示語注入失敗，改用 fallback。', true);
+          fallbackInjectTextToTab(tabId, promptText, callback);
+        } else {
+          if (callback) callback(null, response);
+        }
+      });
+    });
   }
 
   function sendImageDataToTab(imageDataUrl, imageName, send, callback) {
@@ -175,42 +234,60 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
+    const helperPrompt = helperPromptInput.value.trim();
+    const promptText = helperPrompt || DEFAULT_PROMPT;
     const form = new FormData();
     form.append('file', file);
     form.append('pages', pages);
 
-    updateStatus('正在上傳 PDF 並渲染頁面...', false);
-    fetch('http://127.0.0.1:8000/upload', {
-      method: 'POST',
-      body: form
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (!data.images || !data.images.length) {
-          throw new Error('伺服器未回傳圖片');
-        }
-        updateStatus(`已渲染 ${data.images.length} 頁，開始插入...`, false);
-        let index = 0;
-        const insertNext = () => {
-          if (index >= data.images.length) {
-            updateStatus('已將 PDF 頁面插入 Gemini。', false);
-            return;
+    const beginUpload = function () {
+      updateStatus('正在上傳 PDF 並渲染頁面...', false);
+      fetch('http://127.0.0.1:8000/upload', {
+        method: 'POST',
+        body: form
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.images || !data.images.length) {
+            throw new Error('伺服器未回傳圖片');
           }
-          const imageDataUrl = data.images[index];
-          const imageName = `page_${index + 1}.png`;
-          sendImageDataToTab(imageDataUrl, imageName, send, (err) => {
-            if (err) {
-              updateStatus('插入圖片失敗: ' + err.message, true);
+          updateStatus(`已渲染 ${data.images.length} 頁，開始插入...`, false);
+          let index = 0;
+          const insertNext = () => {
+            if (index >= data.images.length) {
+              updateStatus('已將 PDF 頁面插入 Gemini。', false);
               return;
             }
-            index += 1;
-            setTimeout(insertNext, 600);
-          });
-        };
-        insertNext();
-      })
-      .catch(err => {
-        updateStatus('PDF 上傳或渲染失敗: ' + (err && err.message), true);
+            const imageDataUrl = data.images[index];
+            const imageName = `page_${index + 1}.png`;
+            const sendImage = send && index === data.images.length - 1;
+            sendImageDataToTab(imageDataUrl, imageName, sendImage, (err) => {
+              if (err) {
+                updateStatus('插入圖片失敗: ' + err.message, true);
+                return;
+              }
+              index += 1;
+              setTimeout(insertNext, 600);
+            });
+          };
+          insertNext();
+        })
+        .catch(err => {
+          updateStatus('PDF 上傳或渲染失敗: ' + (err && err.message), true);
+        });
+    };
+
+    if (promptText) {
+      updateStatus('正在插入輔助提示...', false);
+      insertPromptTextToTab(promptText, (err) => {
+        if (err) {
+          updateStatus('輔助提示插入失敗: ' + err.message, true);
+          return;
+        }
+        beginUpload();
       });
+    } else {
+      beginUpload();
+    }
   });
 });
