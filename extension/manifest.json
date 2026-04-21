@@ -5,7 +5,8 @@
   "description": "Inject text into the Gemini input box via a popup or page event.",
   "permissions": [
     "scripting",
-    "activeTab"
+    "activeTab",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "https://gemini.google.com/*",
@@ -15,6 +16,12 @@
     "default_popup": "popup/popup.html",
     "default_title": "Gemini Injector"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["example.png"],
+      "matches": ["https://gemini.google.com/*", "https://*.google.com/*"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["https://gemini.google.com/*", "https://*.google.com/*"],

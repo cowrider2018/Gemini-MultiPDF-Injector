@@ -9,10 +9,12 @@
 <body>
   <div class="container">
     <h3>Gemini Injector</h3>
-    <textarea id="text" placeholder="輸入要貼到 Gemini 的文字..." rows="6"></textarea>
+    <img id="preview" alt="example preview" style="width:100%;height:auto;border:1px solid #ddd;margin-bottom:8px" />
     <div class="controls">
       <label><input type="checkbox" id="doSend" checked> 送出（Send）</label>
-      <button id="sendBtn">送出</button>
+      <div style="display:flex;gap:8px">
+        <button id="insertImageBtn">插入 example.png</button>
+      </div>
     </div>
     <div id="status" class="status"></div>
   </div>
