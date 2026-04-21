@@ -7,7 +7,7 @@ send_to_gemini.py
 
 範例：
   python send_to_gemini.py --text "你好 Gemini" --send
-  python send_to_gemini.py --pdf "C:\\path\\to\\document.pdf" --pages 1,3-4 --send
+  python send_to_gemini.py --pdf "C:\\path\\to\\document.pdf" --pages 1,3-5 --send
 
 備註：
 - 若要使用已登入的 Chrome 帳號，可加上 --profile "C:\\Users\\<you>\\AppData\\Local\\Google\\Chrome\\User Data"

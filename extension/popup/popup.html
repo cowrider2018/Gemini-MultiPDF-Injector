@@ -8,21 +8,57 @@
 </head>
 <body>
   <div class="container">
-    <h3>Gemini PDF 上傳</h3>
-    <div class="field">
-      <label>本地 PDF 檔案</label>
-      <input id="pdfFile" type="file" accept="application/pdf" />
+    <!-- 頁首裝飾 -->
+    <div class="header-decoration"></div>
+    
+    <!-- 標題區域 -->
+    <div class="header">
+      <div class="title-icon">📖</div>
+      <div>
+        <h1 class="main-title">PDF 知識庫</h1>
+        <p class="subtitle">智慧文檔轉換工具</p>
+      </div>
     </div>
-    <div class="field">
-      <label>頁碼（例如 1 或 1,3-4）</label>
-      <input id="pages" type="text" placeholder="1,3-4" value="1" />
+    
+    <!-- 分隔線 -->
+    <div class="divider"></div>
+    
+    <!-- 表單區域 -->
+    <div class="form-section">
+      <!-- PDF 檔案選擇 -->
+      <div class="field">
+        <label class="label-icon">📄 本地 PDF 檔案</label>
+        <div class="input-wrapper">
+          <input id="pdfFile" type="file" accept="application/pdf" />
+        </div>
+      </div>
+      
+      <!-- 頁碼選擇 -->
+      <div class="field">
+        <label class="label-icon">📑 頁碼選擇</label>
+        <input id="pages" type="text" placeholder="例如：1 或 1,3-5" value="1" class="pages-input" />
+        <p class="hint-text">💡 支持多頁面：如 1,3-5 表示第1、3、4、5頁</p>
+      </div>
+      
+      <!-- 控制面板 -->
+      <div class="controls">
+        <label class="checkbox-label">
+          <input type="checkbox" id="doSend" checked>
+          <span>自動送出</span>
+        </label>
+      </div>
+      
+      <!-- 操作按鈕 -->
+      <button id="uploadPdfBtn" class="btn-primary">上傳 PDF 並插入圖片</button>
+      
+      <!-- 裝飾角 -->
+      <div class="corner-decoration"></div>
     </div>
-    <div class="controls">
-      <label><input type="checkbox" id="doSend" checked> 送出（Send）</label>
-      <button id="uploadPdfBtn">上傳 PDF 並插入圖片</button>
-    </div>
+    
+    <!-- 狀態區域 -->
     <div id="status" class="status"></div>
   </div>
+  
   <script src="popup.js"></script>
 </body>
 </html>

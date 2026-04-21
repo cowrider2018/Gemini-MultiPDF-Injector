@@ -15,7 +15,7 @@ python selenium/pdf_server.py
 
 如果你想直接用 Selenium：
 ```
-python selenium/send_to_gemini.py --pdf "C:\\path\\to\\document.pdf" --pages 1,3-4 --send --profile "C:\\Users\\<you>\\AppData\\Local\\Google\\Chrome\\User Data"
+python selenium/send_to_gemini.py --pdf "C:\\path\\to\\document.pdf" --pages 1,3-5 --send --profile "C:\\Users\\<you>\\AppData\\Local\\Google\\Chrome\\User Data"
 ```
 
 說明：若要使用已登入的 Gemini（保持 session），請指定 `--profile` 指向 Chrome 的 user data 目錄。避免在 headless 模式使用擴充。
