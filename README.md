@@ -1,21 +1,66 @@
-# Gemini Injector — Chrome 擴充 + Selenium 範例
+# 使用流程
 
-內容：
-- `extension/` — Chrome 擴充（content script），監聽 custom event 並將文字插入 Gemini 輸入框。
-- `selenium/send_to_gemini.py` — 使用 Selenium 觸發 custom event 的範例腳本。
+前提
+- 已安裝 Python 3.10+（或系統可執行 `python`）。
+- 本指引針對 Windows（PowerShell、cmd）示範命令。
 
-快速開始：
-1. 在 Chrome 的擴充程式管理頁啟用「開發人員模式」，載入 `extension/` 資料夾為 unpacked extension（若要使用 popup 或 extension 注入功能）。
-2. 安裝 Python 相依：`python -m pip install -r selenium/requirements.txt`
-3. 啟動本地 PDF 渲染伺服器：
-```
-python selenium/pdf_server.py
-```
-4. 在 Gemini 分頁打開擴充 popup，選擇本地 PDF 檔案、輸入頁碼後按「上傳 PDF 並插入圖片」。
+1) 建立並啟用虛擬環境（venv）
 
-如果你想直接用 Selenium：
-```
-python selenium/send_to_gemini.py --pdf "C:\\path\\to\\document.pdf" --pages 1,3-5 --send --profile "C:\\Users\\<you>\\AppData\\Local\\Google\\Chrome\\User Data"
+- 在專案根目錄開啟 PowerShell，執行：
+
+```powershell
+python -m venv .venv
 ```
 
-說明：若要使用已登入的 Gemini（保持 session），請指定 `--profile` 指向 Chrome 的 user data 目錄。避免在 headless 模式使用擴充。
+- 啟用 venv（PowerShell / cmd 有所不同）：
+
+```powershell
+& .\.venv\Scripts\Activate.ps1
+```
+
+```cmd
+.venv\Scripts\activate
+```
+
+2) 安裝 Python 相依
+
+- 進入 `selenium` 資料夾並安裝：
+
+```powershell
+cd selenium
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+3) 啟動本地 PDF 渲染伺服器
+
+```powershell
+python pdf_server.py
+```
+
+4) 在瀏覽器載入擴充（Chrome / Edge）
+
+- 開啟 Chrome，網址列輸入 `chrome://extensions`。
+- 右上角開啟「開發人員模式」。
+- 按「載入未封裝項目」，然後選擇專案中的 `extension` 資料夾（`pdf_to_gemini\extension`）。
+
+5) 使用擴充的步驟
+
+- 在瀏覽器開啟 gemini 分頁（https://gemini.google.com/app）。
+- 點選瀏覽器工具列的擴充圖示打開 Gemini injector。
+- 在 Gemini injector 介面依序操作（選檔、填頁碼、按上傳）。
+
+# 命令總覽
+
+PowerShell（在專案根目錄）:
+
+```powershell
+python -m venv .venv
+& .\.venv\Scripts\Activate.ps1
+cd selenium
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python pdf_server.py
+```
+
+在 Chrome 載入擴充：打開 `chrome://extensions` → 右上角開啟「開發人員模式」→ 點「Load unpacked」→ 選擇 `extension` 資料夾。
