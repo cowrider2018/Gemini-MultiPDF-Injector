@@ -1,5 +1,7 @@
 # 使用流程
 
+本擴充工具自動渲染多頁 PDF 並上傳至 Gemini 對話框，省去手動截圖的麻煩。
+
 前提
 - 已安裝 Python 3.10+（或系統可執行 `python`）。
 - 本指引針對 Windows（PowerShell、cmd）示範命令。
